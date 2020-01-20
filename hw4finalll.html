@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Homework 4</title>
+	<style>
+		body{
+			margin-top:10%;
+		}
+		.content
+		{
+			text-align: center;
+			margin: auto;
+		}
+		input[type=button]
+		{
+			border-radius: 3px;
+			width: 110px;
+			padding-top: 1px;
+			padding-bottom: 1px;
+		}
+
+	</style>
+	<script type="text/javascript">
+
+		function car_list(what) 
+		{
+			var URL = what.URL.value;  
+
+  			function loadJSON(url) 
+  			{
+  				if(url.length === 0 || !url.trim()) 
+  				{
+          			alert('ERROR: Enter file name.');
+          			return;
+      			}
+	  			xmlhttp=new XMLHttpRequest();
+	  			xmlhttp.open("GET",url,false);
+	  			try
+	  			{
+	  				xmlhttp.send();
+	  			}
+	  			catch(err)
+	  			{
+	  				alert('ERROR: File not Found.');
+	  				return;
+	  			}
+	  			var response;
+      			if (xmlhttp.readyState == 4 && xmlhttp.status == "200") 
+      			{
+          			response = xmlhttp.responseText;
+      			} 
+      			else 
+      			{
+          			alert('ERROR: File not Found.');
+          			return;
+      			}
+
+      			try 
+      			{
+          			jsonObj= JSON.parse(response);
+      			} 
+      			catch(err) 
+      			{
+           			alert(err);
+          			return;
+      			}
+
+      			//Error Handling for wrong/missing JSON File Format
+      			var parent_data=jsonObj.Mainline.Table;
+      			if(!(parent_data.hasOwnProperty('Header') && parent_data.Header.hasOwnProperty('Data')))
+        		{
+          			alert("ERROR, Header information missing in JSON File");
+          			return;
+      			}
+      			if(!(parent_data.hasOwnProperty('Row'))) 
+      			{
+      				alert("ERROR, Row information missing in JSON File");
+          			return;
+      			}
+      			if(!(parent_data.Row.length > 0))
+      			{
+      				alert("ERROR, No Entries found in Row Array in JSON File ");
+          			return;
+      			}
+
+	  			return jsonObj;   
+ 			}
+
+
+ 			function generateHTML(jsonObj)   
+			{
+		        html_text="<html><head><title>Largest Manufacturers by Production (2017)</title></head><body>";
+		        html_text+="<table border='2'>"; 
+		        car_header=jsonObj.Mainline.Table.Header.Data; 
+	           	html_text+="<tbody>"; 
+	          	html_text+="<tr>"; 
+
+		 		// output the headers
+	           	for(i=0;i<car_header.length;i++)           
+	           	{ 		       
+	           		header=car_header[i];
+	           		if(header==null)
+	           		{
+	           			header="";
+	           		}
+					html_text+="<th>"+header+"</th>";    			
+				}    
+				html_text+="</tr>";
+
+				var car_content=jsonObj.Mainline.Table.Row; 
+				for(i=0;i<car_content.length;i++) 
+          		{                 
+					carList=car_content[i]; 
+	                html_text+="<tr>";      
+
+                    if(carList["Rank"]==null)
+                    {
+                    	carList["Rank"]="";
+                    }
+	              	html_text+="<td>"+ carList["Rank"] +"</td>";	
+
+	              	if(carList["Group"]==null)
+                    {
+                    	carList["Group"]="";
+                    }	
+	              	html_text+="<td>"+ carList["Group"] +"</td>";
+
+	              	
+          			curr_hub=carList["Hubs"].Hub;
+          			if(curr_hub.length>0)	
+       				{		
+       					if(curr_hub[0]!=null && curr_hub[0]!="" && curr_hub[0].trim()!="")
+       					{
+	       					html_text+="<td><br><ul><li><b>"+curr_hub[0]+"</b></li>"
+	       				}
+	       				else
+	       				{
+	       					html_text+="<td><ul>";
+	       				}
+	       				for(k=1;k<curr_hub.length;k++)
+	       				{
+	       					if(curr_hub[k]!=null && curr_hub[k]!="" && curr_hub[k].trim()!="")
+       						{
+	       						html_text+="<li>"+curr_hub[k]+"</li>"; 
+	       					}
+	       						
+	       				}
+	       				html_text+="</ul><br></td>";
+	       			}
+	       			else
+	       			{
+	       				html_text+="<td></td>";
+	       			}
+	              		
+	              		
+	              	if(carList["Vehicles"]==null)
+                    {
+                    	carList["Vehicles"]="";
+                    }
+	              	html_text+="<td>"+ carList["Vehicles"] +"</td>";
+	              			
+	              	if(carList["HomePage"]==null)
+                    {
+                    	carList["HomePage"]="";
+                    }
+	              	html_text+="<td><a href='"+ carList["HomePage"] +"'>"+carList["HomePage"]+"</a></td>";
+	              		
+	              		
+          			curr_logo=carList["Logo"];
+          			if(curr_logo!=null && curr_logo!="" && curr_logo.trim()!="")
+       				{         			
+       					html_text+="<td><img src='"+ curr_logo +"' width='"+140+"' height='"+140+"'></td>"; 	
+       				}
+       				else
+       				{
+       					html_text+="<td></td>"; 
+       				}
+	              		
+
+					html_text+="</tr>"; 					           
+				}                            
+
+
+				html_text+="</tbody>"; 
+	 			html_text+="</table>";           
+				html_text+="</bo"+ "dy>";
+				html_text+="</html>";  
+
+			} 
+
+			var jsonObj=null;
+	  		jsonObj = loadJSON(URL);
+	  		if(jsonObj!=null)
+	  		{
+		  		jsonObj.onload=generateHTML(jsonObj);
+		  		var hWin = window.open('/','myWindow','scrollbars=1,resizable=1,height=1000,width=1200,left=0,top=0');
+		  		hWin.document.write(html_text); 
+		  		hWin.document.close();  
+		  	}
+		}
+
+	</script>
+</head>
+
+<body>
+	<div class="content">
+		<p><h2>Enter URL for largest manufacturers by production (2017) List JSON File</h2></p>
+		<form name="myform" method="POST" id="location">
+			<input type="text" name="URL" maxlength="50" size="30"/>
+			<br>
+			<br>
+			<input type="button" name="submit" value="Submit Query" onClick="car_list(this.form)" />
+		</form>
+	</div>
+</body>
+</html>
